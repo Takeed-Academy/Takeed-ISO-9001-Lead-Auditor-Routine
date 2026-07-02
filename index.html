@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Takeed ISO 9001 Lead Auditor Routine</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body class="access-locked">
+    <section class="access-gate" id="accessGate" aria-labelledby="accessTitle">
+      <div class="access-card">
+        <div class="access-brand">
+          <img src="assets/logos/takeed-wordmark.png" alt="Takeed Academy">
+          <span>Controlled learner access</span>
+        </div>
+        <div class="access-copy">
+          <p class="eyebrow">Candidate sign-in</p>
+          <h1 id="accessTitle">ISO 9001 Lead Auditor Training Platform</h1>
+          <p>Enter the candidate details and access code issued for this cohort. The routine, assets, and mock exam unlock after verification.</p>
+        </div>
+        <form class="access-form" id="accessForm" novalidate>
+          <label>
+            <span>Full name</span>
+            <input type="text" id="candidateName" name="candidateName" autocomplete="name" placeholder="Candidate full name" required>
+          </label>
+          <label>
+            <span>Email</span>
+            <input type="email" id="candidateEmail" name="candidateEmail" autocomplete="email" placeholder="name@example.com" required>
+          </label>
+          <label>
+            <span>Access code</span>
+            <input type="text" id="accessCode" name="accessCode" autocomplete="one-time-code" placeholder="TA-QMS-LA-2026" required>
+          </label>
+          <p class="form-error" id="accessError" role="alert"></p>
+          <button class="primary-button" type="submit">
+            <i data-lucide="log-in"></i>
+            <span>Verify Access</span>
+          </button>
+          <p class="access-hint">Demo code for this local prototype: <strong>TA-QMS-LA-2026</strong></p>
+        </form>
+      </div>
+    </section>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#routine" aria-label="Takeed ISO 9001 Lead Auditor routine">
+          <img src="assets/logos/takeed-wordmark.png" alt="Takeed Academy">
+          <span>
+            <strong>ISO 9001:2015 Lead Auditor</strong>
+            <small>Active 5-Day Routine</small>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <button class="nav-button is-active" type="button" data-view="routine">
+            <i data-lucide="calendar-days"></i>
+            <span>Routine</span>
+          </button>
+          <button class="nav-button" type="button" data-view="exam">
+            <i data-lucide="clipboard-check"></i>
+            <span>Exam Lab</span>
+          </button>
+          <button class="nav-button" type="button" data-view="assets">
+            <i data-lucide="folder-open"></i>
+            <span>Assets</span>
+          </button>
+        </nav>
+
+        <div class="top-actions">
+          <div class="user-chip" id="userChip" aria-live="polite"></div>
+          <button class="icon-button" type="button" id="resetProgress" aria-label="Reset progress" title="Reset progress">
+            <i data-lucide="rotate-ccw"></i>
+          </button>
+          <button class="icon-button" type="button" id="logoutUser" aria-label="Sign out" title="Sign out">
+            <i data-lucide="log-out"></i>
+          </button>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <section class="candidate-ticket" aria-label="Candidate exam summary">
+          <img src="assets/logos/takeed-mark.png" alt="">
+          <div id="candidateTicketText">
+            <strong>Takeed Exam Readiness</strong>
+            <span>100 questions | 120 minutes | 70% pass</span>
+          </div>
+        </section>
+
+        <div class="progress-total">
+          <div class="progress-label">
+            <span>Routine Completion</span>
+            <strong id="overallPercent">0%</strong>
+          </div>
+          <div class="bar" aria-hidden="true"><span id="overallBar"></span></div>
+        </div>
+
+        <div class="day-list" id="dayList" aria-label="Course days"></div>
+
+        <section class="sidebar-note">
+          <strong>NileTrust Case</strong>
+          <p>Use one continuous audit trail: context, risk, evidence, finding, corrective action, readiness.</p>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <section class="view-pane is-active" id="routineView" aria-labelledby="routineTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Daily routine</p>
+              <h1 id="routineTitle">ISO 9001 Lead Auditor Active Routine</h1>
+            </div>
+            <div class="metric-row" aria-label="Exam settings">
+              <span><strong>5</strong> days</span>
+              <span><strong>10</strong> workshops</span>
+              <span><strong>7</strong> domains</span>
+            </div>
+          </div>
+
+          <div class="routine-grid">
+            <section class="day-panel" id="dayPanel"></section>
+            <section class="support-panel" id="supportPanel"></section>
+          </div>
+        </section>
+
+        <section class="view-pane" id="examView" aria-labelledby="examTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Day 5 assessment</p>
+              <h1 id="examTitle">Takeed Examination Simulator</h1>
+            </div>
+            <div class="metric-row exam-metrics">
+              <span><strong id="examAnsweredMetric">0</strong> answered</span>
+              <span><strong id="examFlaggedMetric">0</strong> flagged</span>
+              <span><strong id="examTimerMetric">120:00</strong></span>
+            </div>
+          </div>
+          <div id="examPanel"></div>
+        </section>
+
+        <section class="view-pane" id="assetsView" aria-labelledby="assetsTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Takeed assets</p>
+              <h1 id="assetsTitle">Course Visual Library</h1>
+            </div>
+            <div class="metric-row">
+              <span><strong>22</strong> embedded visuals</span>
+            </div>
+          </div>
+          <div class="asset-grid" id="assetGrid"></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
