@@ -143,26 +143,26 @@ const days = [
   },
   {
     id: 5,
-    title: "Improvement & Certification",
-    subtitle: "Clause 10, Stage 1, Stage 2, 100-question mock",
-    summary: "Close the loop with nonconformity, correction, corrective action, effectiveness verification, certification readiness, then sit a full 100-question timed simulator.",
-    focus: ["Clause 10", "W9-W10", "Stage 1/2", "100-question exam"],
+    title: "Full Mock Exam",
+    subtitle: "100-question mock only",
+    summary: "Day 5 is reserved for exam conditions: access check, pacing discipline, a 100-question mock, review of flagged or blank answers, and a targeted score repair plan.",
+    focus: ["100-question mock", "120 minutes", "70% pass", "Review misses"],
     sessions: [
-      { time: "08:30-09:15", title: "Clause 10 deep review", text: "Separate nonconformity, correction, corrective action, root cause, effectiveness, and continual improvement.", tags: ["Clause 10", "W9"] },
-      { time: "09:15-10:45", title: "CAPA and 5 Whys lab", text: "Write one nonconformity, perform root cause analysis, plan corrective action, and define verification evidence.", tags: ["CAPA", "5 Whys"] },
-      { time: "11:00-12:30", title: "Certification readiness", text: "Prepare Stage 1 documented information and Stage 2 implementation evidence; identify gaps before the body arrives.", tags: ["Stage 1", "Stage 2", "W10"] },
-      { time: "13:30-15:30", title: "Full exam simulator", text: "Answer 100 questions in 120 minutes with timer, flagging, review grid, and no penalty for wrong answers.", tags: ["100 questions", "120 minutes"] },
-      { time: "15:45-17:15", title: "Debrief and repair plan", text: "Review weak domains, write a final 48-hour study plan, and rehearse exam-day pacing and conduct.", tags: ["70% pass", "Review"] }
+      { time: "08:30-08:50", title: "Access and exam setup", text: "Confirm candidate access, quiet room, timer, calculator-free rules, and the no-blank-answer strategy.", tags: ["Access", "Setup"] },
+      { time: "08:50-09:10", title: "Pacing rehearsal", text: "Set the target pace, flagging rule, and review checkpoint before opening the mock paper.", tags: ["Pacing", "Flags"] },
+      { time: "09:10-11:10", title: "Full mock attempt", text: "Answer 100 questions in 120 minutes using the simulator, timer, flagging, and review grid.", tags: ["100 questions", "120 minutes"] },
+      { time: "11:10-11:30", title: "Submit and score review", text: "Submit the attempt, read the domain breakdown, and identify every domain below the 70% readiness line.", tags: ["Score", "Domains"] },
+      { time: "13:30-15:00", title: "Mock-only repair round", text: "Review missed and blank questions, then repeat the weakest question groups before any second attempt.", tags: ["Misses", "Retake"] }
     ],
     tasks: [
-      ["Write the final NC statement", "Include requirement, evidence, factual gap, and impact without exaggeration."],
-      ["Complete root cause analysis", "Use 5 Whys and reject superficial causes until the system cause is clear."],
-      ["Plan corrective action", "Assign owner, due date, action, evidence, and effectiveness verification."],
-      ["Build Stage 1 evidence list", "Documented scope, policy, objectives, process map, internal audit, management review, and records."],
-      ["Build Stage 2 evidence list", "Implemented controls, interviews, records, results, nonconformity handling, and improvement."],
-      ["Sit the 100-question mock", "Use the simulator, flag hard questions, and submit only after the review screen."],
-      ["Analyze domain score", "Focus the final review on domains below 70%."],
-      ["Write exam-day checklist", "ID, camera, connection, quiet room, link, code, pacing, and no blank answers."]
+      ["Confirm candidate access", "Sign in, confirm the cohort, and check the 120-minute exam window."],
+      ["Set pacing target", "Use 72 seconds per question and reserve review time for flagged items."],
+      ["Start the 100-question mock", "Use the simulator only; do not open notes during the timed attempt."],
+      ["Answer every question", "Leave no blanks. Select the best answer even when uncertain."],
+      ["Flag hard questions", "Mark difficult items and return through the review grid before submitting."],
+      ["Submit the mock", "Confirm final submission and capture the provisional score."],
+      ["Review missed questions", "Use the quality review panel to read correct answers and rationales."],
+      ["Write the repair plan", "List domains below 70%, then schedule a focused retake block."]
     ],
     assets: [
       ["Corrective Action Flow", "assets/workshop/16_nonconformity_corrective_action_flow.svg", "Clause 10"],
@@ -328,7 +328,26 @@ const rawQuestionBank = [
   q("M7", "Recertification", "MCQ", "A recertification audit should consider:", ["QMS performance over the cycle, continued conformity, effectiveness, changes, and previous audit results.", "Only the certificate frame.", "Only the original application form.", "Only whether the audit team is available."], 0, "Recertification reviews continued conformity and effectiveness across the certification cycle.")
 ];
 
-const questionBank = rawQuestionBank.map((question, index) => ({ ...question, id: index + 1 }));
+function orderQuestionOptions(question, id) {
+  const indexedOptions = question.options.map((option, index) => ({ option, index }));
+  const shift = id % indexedOptions.length;
+  const ordered = indexedOptions.slice(shift).concat(indexedOptions.slice(0, shift));
+  return {
+    ...question,
+    id,
+    options: ordered.map((item) => item.option),
+    answer: ordered.findIndex((item) => item.index === question.answer)
+  };
+}
+
+const questionBank = rawQuestionBank.map((question, index) => orderQuestionOptions(question, index + 1));
+
+const dailyQuestionIds = {
+  1: [1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 21, 24],
+  2: [14, 25, 26, 27, 28, 29, 30, 52, 54, 57, 59, 64],
+  3: [15, 31, 32, 33, 34, 35, 53, 55, 61, 62, 65, 66],
+  4: [16, 17, 18, 19, 36, 38, 39, 40, 41, 42, 43, 44, 76, 78, 80, 85]
+};
 
 let state = loadState();
 let sprintInterval = null;
@@ -348,9 +367,16 @@ const examState = {
 };
 
 function loadState() {
-  const fallback = { selectedDay: 1, activeView: "routine", done: {}, notes: {}, sprintSeconds: 0, user: null };
+  const fallback = { selectedDay: 1, activeView: "routine", done: {}, notes: {}, dailyQuiz: {}, sprintSeconds: 0, user: null };
   try {
-    return { ...fallback, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") };
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    return {
+      ...fallback,
+      ...saved,
+      done: saved.done || {},
+      notes: saved.notes || {},
+      dailyQuiz: saved.dailyQuiz || {}
+    };
   } catch {
     return fallback;
   }
@@ -362,6 +388,7 @@ function saveState() {
     activeView: state.activeView,
     done: state.done,
     notes: state.notes,
+    dailyQuiz: state.dailyQuiz,
     sprintSeconds: state.sprintSeconds,
     user: state.user
   }));
@@ -528,7 +555,7 @@ function bindEvents() {
       return;
     }
 
-    if (button.id === "launchExam" || button.id === "startExam") {
+    if (button.dataset.startMock || button.id === "launchExam" || button.id === "startExam") {
       setView("exam");
       startExam();
       return;
@@ -536,6 +563,21 @@ function bindEvents() {
 
     if (button.id === "resetProgress") {
       resetProgress();
+      return;
+    }
+
+    if (button.dataset.dailyAnswer !== undefined) {
+      answerDailyQuiz(Number(button.dataset.dailyAnswer));
+      return;
+    }
+
+    if (button.dataset.dailyMove !== undefined) {
+      moveDailyQuiz(Number(button.dataset.dailyMove));
+      return;
+    }
+
+    if (button.dataset.dailyReset !== undefined) {
+      resetDailyQuiz(Number(button.dataset.dailyReset));
       return;
     }
 
@@ -671,7 +713,7 @@ function renderDayPanel() {
   const percent = getDayPercent(day.id);
   const panel = $("#dayPanel");
   const examButton = day.id === 5
-    ? `<button class="primary-button" type="button" id="launchExam"><i data-lucide="clipboard-check"></i><span>Start 100-Question Mock</span></button>`
+    ? `<button class="primary-button" type="button" data-start-mock="true"><i data-lucide="clipboard-check"></i><span>Start 100-Question Mock</span></button>`
     : "";
 
   panel.innerHTML = `
@@ -747,6 +789,8 @@ function renderSupportPanel() {
       </div>
     </section>
 
+    ${renderDailyQuizPanel(day)}
+
     <section class="notes-panel">
       <header>
         <h3>Audit Notes</h3>
@@ -796,6 +840,163 @@ function renderSupportPanel() {
   });
 
   renderIcons();
+}
+
+function renderDailyQuizPanel(day) {
+  const questions = getDailyQuestions(day.id);
+
+  if (!questions.length) {
+    return `
+      <section class="daily-quiz-panel mock-only-panel">
+        <header>
+          <div>
+            <p class="eyebrow">Day ${day.id} assessment</p>
+            <h3>Mock questions only</h3>
+          </div>
+          <span class="tag is-maroon">100 questions</span>
+        </header>
+        <p>Day 5 has no separate daily quiz. Use the full 100-question mock exam, review screen, timer, and missed-question quality review.</p>
+        <div class="mock-steps">
+          <span>Access check</span>
+          <span>120-minute mock</span>
+          <span>Submit once</span>
+          <span>Review misses</span>
+        </div>
+        <button class="primary-button" type="button" data-start-mock="true"><i data-lucide="clipboard-check"></i><span>Start Full Mock</span></button>
+      </section>
+    `;
+  }
+
+  const entry = getDailyQuizEntry(day.id, questions.length);
+  const question = questions[entry.current];
+  const selected = entry.answers[entry.current];
+  const stats = getDailyQuizStats(day.id);
+  const answeredPercent = Math.round((stats.answered / stats.total) * 100);
+  const complete = stats.answered === stats.total;
+
+  return `
+    <section class="daily-quiz-panel">
+      <header>
+        <div>
+          <p class="eyebrow">Day ${day.id} practice questions</p>
+          <h3>Separate Daily Quiz</h3>
+        </div>
+        <span class="tag ${complete && stats.score >= 70 ? "is-green" : ""}">${stats.answered}/${stats.total} answered</span>
+      </header>
+      <div class="daily-score-row">
+        <strong>${stats.correct}/${stats.total} correct</strong>
+        <span>${complete ? `${stats.score}% final` : `${answeredPercent}% answered`}</span>
+        <div class="mini-bar" aria-hidden="true"><i style="width:${complete ? stats.score : answeredPercent}%"></i></div>
+      </div>
+      <div class="daily-question-meta">
+        <span>Question ${entry.current + 1} of ${questions.length}</span>
+        <span>${escapeHtml(question.domain)}</span>
+        <span>${escapeHtml(question.clause)}</span>
+      </div>
+      <p class="daily-question-text">${escapeHtml(question.prompt)}</p>
+      <div class="daily-answer-list">
+        ${question.options.map((option, index) => {
+          const isSelected = selected === index;
+          const showCorrect = selected !== undefined && index === question.answer;
+          const showWrong = selected !== undefined && isSelected && index !== question.answer;
+          const classes = [
+            isSelected ? "is-selected" : "",
+            showCorrect ? "is-correct" : "",
+            showWrong ? "is-wrong" : ""
+          ].filter(Boolean).join(" ");
+          return `
+            <button class="daily-answer ${classes}" type="button" data-daily-answer="${index}">
+              <span class="answer-letter">${String.fromCharCode(65 + index)}</span>
+              <span>${escapeHtml(option)}</span>
+            </button>
+          `;
+        }).join("")}
+      </div>
+      ${selected !== undefined ? `
+        <div class="daily-rationale ${selected === question.answer ? "is-correct" : "is-wrong"}">
+          <strong>${selected === question.answer ? "Correct" : `Correct answer: ${escapeHtml(question.options[question.answer])}`}</strong>
+          <p>${escapeHtml(question.rationale)}</p>
+        </div>
+      ` : `
+        <div class="daily-rationale">
+          <p>Select an answer to reveal the correct answer and rationale.</p>
+        </div>
+      `}
+      <div class="daily-quiz-footer">
+        <div class="button-row">
+          <button class="secondary-button" type="button" data-daily-move="-1" ${entry.current === 0 ? "disabled" : ""}><i data-lucide="chevron-left"></i><span>Previous</span></button>
+          <button class="secondary-button" type="button" data-daily-move="1" ${entry.current === questions.length - 1 ? "disabled" : ""}><span>Next</span><i data-lucide="chevron-right"></i></button>
+        </div>
+        <button class="ghost-button" type="button" data-daily-reset="${day.id}"><i data-lucide="rotate-ccw"></i><span>Reset Day Quiz</span></button>
+      </div>
+    </section>
+  `;
+}
+
+function getDailyQuestions(dayId) {
+  return (dailyQuestionIds[dayId] || [])
+    .map((id) => questionBank[id - 1])
+    .filter(Boolean);
+}
+
+function getDailyQuizEntry(dayId, totalQuestions = getDailyQuestions(dayId).length) {
+  state.dailyQuiz ||= {};
+  state.dailyQuiz[dayId] ||= { current: 0, answers: {} };
+  const entry = state.dailyQuiz[dayId];
+  entry.answers ||= {};
+  entry.current = Number.isInteger(entry.current) ? entry.current : 0;
+  entry.current = Math.min(Math.max(entry.current, 0), Math.max(totalQuestions - 1, 0));
+  return entry;
+}
+
+function getDailyQuizStats(dayId) {
+  const questions = getDailyQuestions(dayId);
+  const entry = getDailyQuizEntry(dayId, questions.length);
+  let answered = 0;
+  let correct = 0;
+
+  questions.forEach((question, index) => {
+    const selected = entry.answers[index];
+    if (selected === undefined) return;
+    answered += 1;
+    if (selected === question.answer) correct += 1;
+  });
+
+  return {
+    answered,
+    correct,
+    total: questions.length,
+    score: questions.length ? Math.round((correct / questions.length) * 100) : 0
+  };
+}
+
+function answerDailyQuiz(answerIndex) {
+  const day = getSelectedDay();
+  const questions = getDailyQuestions(day.id);
+  if (!questions.length) return;
+
+  const entry = getDailyQuizEntry(day.id, questions.length);
+  entry.answers[entry.current] = answerIndex;
+  saveState();
+  renderSupportPanel();
+}
+
+function moveDailyQuiz(offset) {
+  const day = getSelectedDay();
+  const questions = getDailyQuestions(day.id);
+  if (!questions.length) return;
+
+  const entry = getDailyQuizEntry(day.id, questions.length);
+  entry.current = Math.min(Math.max(entry.current + offset, 0), questions.length - 1);
+  saveState();
+  renderSupportPanel();
+}
+
+function resetDailyQuiz(dayId) {
+  state.dailyQuiz ||= {};
+  delete state.dailyQuiz[dayId];
+  saveState();
+  renderSupportPanel();
 }
 
 function renderAssets() {
@@ -1211,6 +1412,7 @@ function resetProgress() {
     activeView: "routine",
     done: {},
     notes: {},
+    dailyQuiz: {},
     sprintSeconds: 0
   };
   saveState();
